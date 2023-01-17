@@ -1,4 +1,4 @@
-module docker-prune
+module docker-client
 
 go 1.19
 
