@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"docker-client/prune"
 	"flag"
 	"fmt"
@@ -12,21 +11,14 @@ import (
 )
 
 var (
-	timeBeforeDays     int64
-	pruneDockerState   string
-	pruneImageDangling bool
-	pruneDocker        bool
+	timeBeforeDays int64
 )
 
 func main() {
 
 	flag.Int64Var(&timeBeforeDays, "time-bofore-days", 30, "set coantainer and images time before days to prune")
-	flag.StringVar(&pruneDockerState, "prune-container-state", "exited", "status of container to prune")
-	flag.BoolVar(&pruneDocker, "prune-container", false, "switch of prune container")
-	flag.BoolVar(&pruneImageDangling, "prune-dangling", true, "prune images of dangling")
 	flag.Parse()
 
-	ctx := context.Background()
 	cli, err := dockerClient.NewClientWithOpts(
 		client.FromEnv,
 		client.WithTimeout(time.Minute*5),
@@ -36,8 +28,15 @@ func main() {
 	}
 	defer cli.Close()
 
-	err1 := prune.Prune(ctx, cli, pruneDocker, pruneImageDangling, timeBeforeDays, pruneDockerState)
-	if err != nil {
+	container := prune.Container{
+		Client:         cli,
+		CreateTime:     timeBeforeDays,
+		PruneImage:     true,
+		PruneContainer: true,
+	}
+
+	err1 := container.Prune()
+	if err1 != nil {
 		fmt.Printf("prune get error:%v\n", err1)
 	}
 }
